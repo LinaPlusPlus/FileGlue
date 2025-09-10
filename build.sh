@@ -1,0 +1,1 @@
+cat src/globals.lua src/cliflags.lua src/env.lua src/env_utils.lua src/file_parse.lua src/finally.lua >out.lua

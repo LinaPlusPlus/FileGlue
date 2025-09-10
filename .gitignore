@@ -1,0 +1,7 @@
+
+# ignore editor byproducts
+*.kate-swp
+.vscode
+
+# ignore resulting binary
+out.lua
