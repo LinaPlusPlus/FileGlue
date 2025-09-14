@@ -1,3 +1,7 @@
+-- File Glue v1.0, by Lina Plus
+-- https://github.com/LinaPlusPlus/FileGlue
+-- MIT lisense
+
 local FLAGS = {};
 local USED_FLAGS = {}; -- flags used by the program
 local ENV = {
