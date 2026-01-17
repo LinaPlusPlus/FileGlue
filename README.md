@@ -1,6 +1,6 @@
 # FileGlue
 A small file preprocessor written in lua tha splits a file into headers and reconstructs it using lua code.
-FileGlue statements are heavly asyncronus, you can easly define a variable within another statement across any file and it will wait 
+FileGlue statements are heavly asyncronus, you can easly define a global within a statement while it's accessors wait
 
 
 # Usage
@@ -13,6 +13,8 @@ examples/helloworld1.lua
 -- !!FILEGLUE_STATEMENT_SYNTAX=-->
 -- !!FILEGLUE_MULTILINE_SYNTAX=--+
 
+
+--> -- it doesnt matter what line its on
 --> print(hello("Wonderful"));
 
 --> function hello(noun) return "Hello, "..(noun or "World") end
