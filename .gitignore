@@ -5,3 +5,8 @@
 
 # ignore resulting binary
 out.lua
+
+
+# Added by cargo
+
+/target
