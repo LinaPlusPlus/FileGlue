@@ -1,45 +1,22 @@
-# FileGlue
+# File Glue
 A small file preprocessor written in lua tha splits a file into headers and reconstructs it using lua code.
 FileGlue statements are heavly asyncronus, you can easly define a global within a statement while it's accessors wait
 
+Warning, this project is in active development, the syntax may radically change at any time.
+
+# Current state of the project
+Currently, only the REPL works correctly, file parsing is currently broken
+
+# the REPL 
+if you dont specify a file, it wil enter the REPL, each line is it's own thread.
 
 # Usage
-Warning, this project is in active development, the syntax may radically change at any time
 
-## Example
-
-examples/helloworld1.lua
+here is an exaple:
+this example works by waiting for the "hello" variable
+document level variables are lower case and global variables begin with a capitol letter
 ```
--- !!FILEGLUE_STATEMENT_SYNTAX=-->
--- !!FILEGLUE_MULTILINE_SYNTAX=--+
-
-
---> -- it doesnt matter what line its on
---> print(hello("Wonderful"));
-
---> function hello(noun) return "Hello, "..(noun or "World") end
-
+--> print(hello("World"))
+--> function hello(name) return "Hello, " .. name end
 ```
-
-expected result
-```
-[PRINT ]  tests/helloworld1.lua:4  Hello, Wonderful
-```
-
-`FILEGLUE_STATEMENT_SYNTAX` tells the file processor that the statement syntax is `-->`
-
-NOTE: the `section` syntax describing the file below will likely change
-NOTE: the multi-line syntax is currently broken
-NOTE: the whole file processor may change
-
-### Failing Examples
-
-```
-
-# Building
-
-to
-
-# Validation
-
-Because File Glue should be deturministic, validation is simple
+results in `Hello, World`
