@@ -163,6 +163,8 @@ function add_common_functions(global)
 
             local thread = thread_spawn(("repl%s"):format(counter),group);
 
+            ok = global.luishe.tolua(ok);
+            
             ok,err = thread.global.load(ok,"");
 
             if ok then 
@@ -184,6 +186,102 @@ function add_common_functions(global)
     function global.defer() 
         table.insert(LATER_RESUME_THREADS,CURRENT_THREAD);
         coroutine.yield()
+    end
+
+    global.luishe = {};
+
+    function global.luishe.tolua(statement)
+        local ok = Luishe.parse( statement );
+            
+        ok = Luishe.toLua(ok,{
+            _G = global,
+            table = global.table,
+            string = global.string,
+            math = global.math,
+            commands = global.commands,
+        })
+        return ok;
+    end
+
+    global.commands = {};
+
+    function global.commands.stage(...)
+        -- TODO implement the Stage object
+        -- do arg parsing and apply to "apon $mystage" or the _G.Stage object
+        -- blocks if "await" is set, calls any "then <callback>"s
+
+        -- stage <name> [before <stage>|after <stage>|apon <stageObject>|
+        -- enables <stage>|disables <stage>|enabled-by <stage>|disabled-by <stage>|
+        -- then <callback>|await]
+        local do_await = false;
+        local apon = global.Stage;
+        local commands = {};
+        local stage_name = nil;
+
+        local n = select("#", ...)  -- total number of args (including nil)
+        local k = nil;
+        for i = 1, n do
+            local v = select(i, ...)
+            if stage_name == nil then
+                stage_name = v;
+            elseif k then
+                if k == "apon" then 
+                    apon = v;
+                else
+                    table.insert(commands,{
+                        command = k,
+                        value = v,
+                    });
+                end
+                k = nil;
+            else 
+                if v == "await" then 
+                    do_await = true;
+                else
+                    k = v;
+                end
+            end
+        end
+
+        for k,v in ipairs(commands) do
+            if v.command == "before" then
+                apon:order(stage_name, v.value); -- b after a
+            elseif v.command == "after" then
+                apon:order(v.value, stage_name); 
+            elseif v.command == "enables" then
+                --TODO
+            elseif v.command == "disables" then
+                --TODO
+            elseif v.command == "enabled-by" then
+                --TODO
+            elseif v.command == "disabled-by" then    
+                --TODO
+            else 
+                error(("stage: unknown argument: %s"):format(v.value))
+            end
+        end
+
+    end
+
+    function global.commands.set(var,value)
+        global[var] = value;
+    end 
+
+    function global.commands.await(var)
+        --TODO add waiter logic
+    end
+
+    function global.commands.eval(statement)
+        local l = global.luishe.tolua(statement);
+        local ok,err = global.load(l,statement);
+        assert(ok,err);
+        return ok;
+    end
+
+    function global.commands.lua(statement)
+        local ok,err = global.load(statement);
+        assert(ok,err);
+        return ok;
     end
 
     --TODO add wrapper to log

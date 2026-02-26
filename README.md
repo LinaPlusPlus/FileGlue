@@ -16,7 +16,7 @@ here is an exaple:
 this example works by waiting for the "hello" variable
 document level variables are lower case and global variables begin with a capitol letter
 ```
---> print(hello("World"))
---> function hello(name) return "Hello, " .. name end
+--> say_hello "World"
+--> set say_hello @place{ "Hello ($place)" }
 ```
 results in `Hello, World`

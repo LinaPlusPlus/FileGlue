@@ -54,6 +54,7 @@ fn load_gluecore(lua: &mut Lua) {
         ("sandboxing.lua",include_str!("kernal/sandboxing.lua")),
         ("logging.lua",include_str!("kernal/logging.lua")),
         ("file_reader.lua",include_str!("kernal/file_reader.lua")),
+        ("luishe.lua",include_str!("kernal/luishe.lua")),
     ];
 
     for k in includes {
