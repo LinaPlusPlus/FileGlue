@@ -62,6 +62,7 @@ function thread_spawn(name,group,no_start)
         alive = true,
         co = nil, -- will resume this coroutine
         call = nil, -- will call this function then return
+        p_global = {}, -- read only includes in the global object
     };
     new_sandbox(thread);
     THREADS[thread] = true;
@@ -72,10 +73,11 @@ end
 function main_loop()
 
     SYSTEM_GROUP = group_spawn("system")
-    add_common_functions(SYSTEM_GROUP.global)
     add_system_functions(SYSTEM_GROUP.global)
-
+    
+    
     SYSTEM_THREAD = thread_spawn("system",SYSTEM_GROUP);
+    add_common_functions(SYSTEM_THREAD);
 
     SYSTEM_THREAD.co = coroutine.create(SYSTEM_THREAD.global.load(SYSTEM_APPLET));
     SYSTEM_APPLET = nil;

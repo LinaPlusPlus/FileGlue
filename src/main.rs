@@ -1,12 +1,13 @@
 use std::{collections::HashMap, rc::Rc, sync::Mutex};
 
-use mlua::Lua;
+use mlua::{Lua, LuaOptions, StdLib};
 use rustyline::{DefaultEditor, Editor, history::FileHistory};
 mod flags;
 
 
 fn main() {
-    let mut lua = Lua::new();
+    let lua_options = LuaOptions::new();
+    let mut lua = unsafe { Lua::unsafe_new_with(StdLib::ALL,lua_options) };
 
     let flags: flags::Flags = flags::parse_flags();
 

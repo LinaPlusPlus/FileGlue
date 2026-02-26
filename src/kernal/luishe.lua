@@ -101,7 +101,8 @@ function Lib.parse(codestr)
                 return unit;
             end
 
-            if err then return false end
+            --if err then return false end
+            if err then error(err) end -- this is a HACK
             i=i+1;
         end
     end
@@ -112,10 +113,15 @@ function Lib.parse(codestr)
         while true do
             local char = codestr:sub(i,i);
             --print("str",h,i,char)
-            if char == "(" then
+            if char == "{" then
                 table.insert(unit,codestr:sub(h,i-1));
                 i = i + 1; h = i;
-                table.insert(unit,tree(depth+1));
+                table.insert(unit,tree(depth+1,"}"));
+            elseif char == "\\" then
+                table.insert(unit,codestr:sub(h,i-1));
+                --local char = codestr:sub(i+1,i+1);
+                --table.insert(unit,char);
+                i = i + 1; h = i;
             elseif char == "" then
                 err = ("unclosed string\n\n`%s`\n%s^"):format(codestr,string.rep("-",i));
             elseif char == "\"" then
@@ -123,7 +129,8 @@ function Lib.parse(codestr)
                 h = i + 1;
                 return unit;
             end
-            if err then return false end
+            --if err then return false end
+            if err then error(err) end -- this is a HACK
             i=i+1;
         end
     end
@@ -134,9 +141,9 @@ function Lib.parse(codestr)
 end
 
 Lib.varlookup = {
-    table=table,
-    string=string,
-    _G=_G,
+    {"table",table},
+    {"string",string},
+    {"_G",_G}
 }
 
 function Lib.toLua(ast,varlookup)
@@ -158,10 +165,10 @@ function Lib.toLua(ast,varlookup)
             if try then return "u"..tostring(try); end
         end
 
-        for k,v in pairs(varlookup) do
-            if v[a] ~= nil then 
-                return ("%s[%q]"):format(k,a);
-            end
+        for i,v in ipairs(varlookup) do
+            if v[2][a] ~= nil then 
+                return ("%s[%q]"):format(v[1],a);
+            end 
         end
         return ("_G[%q]"):format(a);
     end

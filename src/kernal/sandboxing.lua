@@ -106,10 +106,18 @@ function new_sandbox(thread)
         __metatable = {},
     };
     function meta:__index(k)
+
+
+        if k == nil then error(debug.traceback("Attempt to index global nil")) end
+
+        local got = thread.p_global[k];
+        if got ~= nil then return got end
+
+
         local byte = string.byte(k)
         local upper = byte >= 65 and byte <= 90;
         if upper then -- we are a global key
-            local got = SHARED_GLOBAL[k]
+            got = SHARED_GLOBAL[k]
             if got ~= nil then return got end
 
             log("trace",thread.label,"awaiting global %q",k)
@@ -118,7 +126,7 @@ function new_sandbox(thread)
             return SHARED_GLOBAL[k];
 
         else -- we are a document-wide key
-            local got = thread.group_global[k]
+            got = thread.group_global[k]
             if got ~= nil then return got end
 
             log("trace",thread.label,"awaiting document %q",k)
@@ -131,6 +139,9 @@ function new_sandbox(thread)
     end
 
     function meta:__newindex(k,v)
+        
+        if k == nil then error(debug.traceback("Attempt to index global nil")) end
+        
         local byte = string.byte(k)
         local upper = byte >= 65 and byte <= 90;
         if upper then
@@ -147,9 +158,11 @@ function new_sandbox(thread)
     thread.global = sandbox;
 end
 
-function add_common_functions(global)
+function add_common_functions(thread)
+    local global = thread.global;
+    local pglobal = thread.p_global;
     --TODO add more
-    function global.repl()  
+    function pglobal.repl()  
 
         local group = CURRENT_THREAD.group;
         local counter = 0;
@@ -161,51 +174,53 @@ function add_common_functions(global)
             local ok,err = repl_prompt(("(%s) --> "):format(counter));
             if not ok then return ok,err end
 
-            local thread = thread_spawn(("repl%s"):format(counter),group);
-
-            ok = global.luishe.tolua(ok);
-            
-            ok,err = thread.global.load(ok,"");
+            local child_thread = thread_spawn(("repl%s"):format(counter),group);
+            add_common_functions(child_thread);
 
             if ok then 
-                thread.co = coroutine.create(ok);
+                child_thread.co = coroutine.create(function()
+                        -- YAY, now we are async parsing
+                        ok = child_thread.global.luishe.tolua(ok);
+                        ok,err = child_thread.global.load(ok,"");
+                        assert(ok,err) -- HACK    
+                        ok();
+                end);
             else
-                thread.co = coroutine.create(function()
-                    log("error",CURRENT_THREAD.label,"%s",err:sub(16))    
+                child_thread.co = coroutine.create(function()
+                    log("error",child_thread.label,"%s",err:sub(16))    
                 end);
             end
 
             global.defer();
-
 
         end
         
         
     end
 
-    function global.defer() 
+    function pglobal.defer() 
         table.insert(LATER_RESUME_THREADS,CURRENT_THREAD);
         coroutine.yield()
     end
 
-    global.luishe = {};
+    pglobal.luishe = {};
 
-    function global.luishe.tolua(statement)
+    function pglobal.luishe.tolua(statement)
         local ok = Luishe.parse( statement );
             
         ok = Luishe.toLua(ok,{
-            _G = global,
-            table = global.table,
-            string = global.string,
-            math = global.math,
-            commands = global.commands,
+            {"commands",global.commands},
+            {"table",global.table},
+            {"string",global.string},
+            {"math",global.math},
+            {"_G",global}, -- index last
         })
         return ok;
     end
 
-    global.commands = {};
+    pglobal.commands = {};
 
-    function global.commands.stage(...)
+    function pglobal.commands.stage(...)
         -- TODO implement the Stage object
         -- do arg parsing and apply to "apon $mystage" or the _G.Stage object
         -- blocks if "await" is set, calls any "then <callback>"s
@@ -263,34 +278,48 @@ function add_common_functions(global)
 
     end
 
-    function global.commands.set(var,value)
-        global[var] = value;
+
+    -- TODO allow deep paths
+    function pglobal.commands.sub(var,sub)
+        return var[sub]
     end 
 
-    function global.commands.await(var)
+    function pglobal.commands.unset(var)
+        global[var] = nil
+    end
+
+    function pglobal.commands.set(var,value)
+        -- the "or false" is a HACK
+        -- setting a global to nil unblocks once
+        -- rather than staying unblocked
+
+        global[var] = value or false; 
+    end 
+
+    function pglobal.commands.await(var)
         --TODO add waiter logic
     end
 
-    function global.commands.eval(statement)
+    function pglobal.commands.eval(statement)
         local l = global.luishe.tolua(statement);
         local ok,err = global.load(l,statement);
         assert(ok,err);
         return ok;
     end
 
-    function global.commands.lua(statement)
+    function pglobal.commands.lua(statement)
         local ok,err = global.load(statement);
         assert(ok,err);
         return ok;
     end
 
     --TODO add wrapper to log
-    global.print = print;
+    pglobal.print = print;
     
     --TODO add safety
-    global.log = log;
+    pglobal.log = log;
 
-    global.dump = dump;
+    pglobal.dump = dump;
 end
 
 function add_system_functions(global)
