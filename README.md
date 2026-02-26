@@ -13,10 +13,28 @@ if you dont specify a file, it wil enter the REPL, each line is it's own thread.
 # Usage
 
 here is an exaple:
-this example works by waiting for the "hello" variable
-document level variables are lower case and global variables begin with a capitol letter
+this example works by waiting for the "say_hello" variable
 ```
 --> say_hello "World"
 --> set say_hello @place{ "Hello ($place)" }
 ```
 results in `Hello, World`
+
+same thing but written in lua
+```
+--> lua "say_hello('world')"
+--> lua $body
+function say_hello(place)
+  print("Hello, "..place)
+end
+```
+results in `Hello, World`
+
+
+# Luishe
+
+Luishe is a custom bash-like/lisp-like language that compiles to and integrates with lua, Both Luishe and now Lua has a custom way of managing variables, both document-level (lowercase) and global (Uppercase) variables will block until they are defined by another thread.
+
+
+
+
