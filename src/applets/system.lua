@@ -1,17 +1,6 @@
-
---[=[
-local cool = kernal.thread_spawn("system2",kernal.SYSTEM_GROUP);
-
-cool.co = kernal.coroutine.create(cool.global.load([[
-    k = 7
-]]));
-
-kernal.log("info","hello","%s",k);
-]=]
-
 if #kernal.LOAD_APPLETS > 0 then
-    for k,v in pairs() do
-
+    for k,v in ipairs(kernal.LOAD_APPLETS) do
+        import(v);
     end
 else
     -- TODO run the REPL under a new group
