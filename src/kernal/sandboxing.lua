@@ -1,3 +1,5 @@
+LOADED_FILE_PATHS = {};
+
 function new_sandbox(thread)
     local sandbox = {
         assert   = assert,
@@ -315,11 +317,58 @@ function add_common_functions(thread)
 
     --TODO add wrapper to log
     pglobal.print = print;
+
+    function pglobal.print(...)
+        local lstr = string.rep("%s\t", select("#",...));
+        log("print",thread.label,lstr,...);
+    end
     
     --TODO add safety
     pglobal.log = log;
 
     pglobal.dump = dump;
+
+    function pglobal.import(file)
+        if LOADED_FILE_PATHS[file] then 
+            return true --TODO return a handle to document variables
+        end
+
+        --TODO add search functionality
+        local handle,err = io.open(file,"r");
+
+        if not handle then 
+            error("Cannot load file: "..err);
+        end
+
+        local group = group_spawn(file);
+        LOADED_FILE_PATHS[file] = group;
+
+        read_arrow_file(handle,function(heading,buildup,line)
+            local name = ("%s:%s"):format(file,line);
+
+            if not heading then return end
+            
+            local child_thread = thread_spawn(name,group);
+            add_common_functions(child_thread);
+            
+            local body = table.concat(buildup,"\n");
+            child_thread.p_global.body = body;
+            child_thread.p_global.__FILE = file;
+            --child_thread.p_global.__DIR = 
+
+            child_thread.co = coroutine.create(function()
+                local ok,err;
+                ok,err = child_thread.global.luishe.tolua(heading);
+                assert(ok,err) -- HACK
+                ok,err = child_thread.global.load(ok,name);
+                assert(ok,err) -- HACK
+                ok();
+            end)
+            
+
+        end);
+
+    end
 end
 
 function add_system_functions(global)
