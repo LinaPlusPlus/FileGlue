@@ -309,10 +309,10 @@ function add_common_functions(thread)
         return ok;
     end
 
-    function pglobal.commands.lua(statement)
+    function pglobal.commands.lua(statement,...)
         local ok,err = global.load(statement);
         assert(ok,err);
-        return ok;
+        return ok(...);
     end
 
     --TODO add wrapper to log
