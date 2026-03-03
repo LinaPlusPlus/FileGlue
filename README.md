@@ -106,4 +106,6 @@ then <callback> | await ]
 --- work in progress
 
 --> lua <luaCode> ...
+runs a lua statement
+
 ```
