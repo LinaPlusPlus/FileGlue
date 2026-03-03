@@ -70,6 +70,7 @@ these are both Luishe commands and lua functions
 --> await <thing>
 --- await a promise or buffer
 --- (any object with the __await metamethod)
+--- will transparently return non awaitable objects
 
 --> warn <template> ...
 --> info <template> ...
@@ -91,5 +92,18 @@ enables <stage> | disables <stage> | enabled-by <stage> | disabled-by <stage> |
 then <callback> | await ]
 --- work in progress
 
+--> set <name> <value>
+--- sets variable named <name> to <value>
+--- unblocking anything awaiting <name> to be defined
 
+--> unset <name>
+--- sets <name> to nil
+--- accessing <name> now blocks
+
+--> getsub <thing> <property>
+--> setsub <thing> <property> <value>
+--> unsetsub <thing> <property>
+--- work in progress
+
+--> lua <luaCode> ...
 ```
