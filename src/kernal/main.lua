@@ -1,5 +1,5 @@
 
-CURRRENT_THREAD = nil
+CURRENT_THREAD = nil
 THREADS = { }
 RESUMABLE_THREADS = { };
 LATER_RESUME_THREADS = { };
@@ -105,6 +105,7 @@ function main_loop()
 
         -- found a thread
         CURRENT_THREAD.yield_to_str = nil;
+        CURRENT_THREAD.can_stall = false; --can only allow a stall for a single await
         
         -- TODO add safety checks even tho it's kernal exclusive functionality
         local call = CURRENT_THREAD.call;
