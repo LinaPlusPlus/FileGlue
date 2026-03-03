@@ -14,14 +14,14 @@ if you dont specify a file, it wil enter the REPL, each line is it's own thread.
 
 here is an exaple:
 this example works by waiting for the "say_hello" variable
-```
+```lua
 --> say_hello "World"
 --> set say_hello @place{ "Hello ($place)" }
 ```
 results in `Hello, World`
 
 same thing but written in lua
-```
+```lua
 --> lua "say_hello('world')"
 --> lua $body
 function say_hello(place)
@@ -33,8 +33,38 @@ results in `Hello, World`
 
 # Luishe
 
-Luishe is a custom bash-like/lisp-like language that compiles to and integrates with lua, Both Luishe and now Lua has a custom way of managing variables, both document-level (lowercase) and global (Uppercase) variables will block until they are defined by another thread.
+Luishe is a custom bash-like/lisp-like language that compiles to and integrates with lua, Both Luishe and now Lua have a custom way of managing variables:
+- local variables (same as lua)
+- thread variables (special lua global)
+- document variables (lowercase lua global)
+- global variables (Uppercase lua globals)
+
+document and global variables will block until they are defined by another thread, if by the end of the program a thread is still blocked, it will throw an error.
+
+## Commands
+
+Luishe searches for commands in this order:
+- _G.commands
+- _G.table
+- _G.string
+- _G.math
+- thread variables
+- document and global variables
+
+### builtin commands (thread variables)
+```
+
+--> repl
+-- launches the REPL
+
+--> defer
+-- await all other threads to finish or become blocked
+
+--> await <thing>
+-- await a promise or buffer
+
+--> warn <template> ...
+--> info <template> ...
 
 
-
-
+```
