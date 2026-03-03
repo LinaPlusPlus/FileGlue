@@ -1,3 +1,5 @@
+local unpack = _G.unpack or table.unpack;
+
 function add_common_functions(thread)
     local global = thread.global;
     local pglobal = thread.p_global;
@@ -120,7 +122,15 @@ function add_common_functions(thread)
 
 
     -- TODO allow deep paths
-    function pglobal.commands.sub(var,sub)
+    function pglobal.commands.unsetsub(var,sub)
+        var[sub] = nil
+    end 
+
+    function pglobal.commands.setsub(var,sub,value)
+        var[sub] = value or false
+    end 
+
+    function pglobal.commands.getsub(var,sub)
         return var[sub]
     end 
 
@@ -135,10 +145,6 @@ function add_common_functions(thread)
 
         global[var] = value or false; 
     end 
-
-    function pglobal.commands.await(var)
-        --TODO add waiter logic
-    end
 
     function pglobal.commands.eval(statement)
         local l = global.luishe.tolua(statement);
@@ -161,9 +167,19 @@ function add_common_functions(thread)
         log("print",thread.label,lstr,...);
     end
     
-    --TODO add safety
-    pglobal.log = log;
+    --pglobal.log = log;
+    function pglobal.warn(...)
+        local lstr = string.rep("%s\t", select("#",...));
+        log("warn",thread.label,lstr,...);
+    end
 
+    --pglobal.log = log;
+    function pglobal.info(...)
+        local lstr = string.rep("%s\t", select("#",...));
+        log("info",thread.label,lstr,...);
+    end
+    
+    --TODO add safety
     pglobal.dump = dump;
 
     function pglobal.import(file)
