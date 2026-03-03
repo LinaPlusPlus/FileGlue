@@ -109,7 +109,7 @@ function new_sandbox(thread)
         return typeof;
     end
 
-    function sandbox.await(t)
+    function sandbox.read(t,...)
         local typeof = type(t);
 
         if typeof ~= "table" then 
@@ -117,8 +117,38 @@ function new_sandbox(thread)
         end
 
         local a = debug.getmetatable(t);
-        local try = a and rawget(a,"__await");
+        local try = a and rawget(a,"__read");
         if try then return try(t) end
+        return t;
+    end
+
+    function sandbox.writef(t,...)
+        return sandbox.write(t,string.format(...));
+    end
+
+    function sandbox.write(t,...)
+        local typeof = type(t);
+
+        if typeof ~= "table" then 
+            return t;
+        end
+
+        local a = debug.getmetatable(t);
+        local try = a and rawget(a,"__write");
+        if try then return try(t,...) end
+        return t;
+    end
+
+    function sandbox.writef(t,...)
+        local typeof = type(t);
+
+        if typeof ~= "table" then 
+            return t;
+        end
+
+        local a = debug.getmetatable(t);
+        local try = a and rawget(a,"__write");
+        if try then return try(t,...) end
         return t;
     end
 

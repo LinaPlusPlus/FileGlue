@@ -182,6 +182,8 @@ function add_common_functions(thread)
     --TODO add safety
     pglobal.dump = dump;
 
+    pglobal.promise = new_promise;
+
     function pglobal.import(file)
         if LOADED_FILE_PATHS[file] then 
             return true --TODO return a handle to document variables
@@ -228,4 +230,48 @@ end
 function add_system_functions(global)
     global.kernal = _G;
     --TODO add more
+end
+
+function new_promise(name)
+
+    -- also prevents memory leak for
+    -- the life of the promise
+    -- if `name` is evil
+    local promise = {}
+    name = ("promise: %s"):format(name or tostring(promise):sub(8));
+    
+    local awaiters = {};
+    local resolved = nil;
+    local meta = {}
+    
+    meta.__metatable = {}
+
+    meta.__type = "promise";
+    function meta:__tostring()
+        return name
+    end
+
+    function meta:__read()
+        if resolved then 
+            return unpack(resolved)
+        end
+        
+        table.insert(awaiters,CURRENT_THREAD)
+        CURRENT_THREAD.yield_to_str = name
+        coroutine.yield();
+    
+        return unpack(resolved)
+    end
+
+    function meta:__write(...)
+        resolved = {...};
+        for k,thread in ipairs(awaiters) do
+            table.insert(RESUMABLE_THREADS,thread);
+        end
+        awaiters = {};
+    end
+
+    setmetatable(promise,meta);
+    return promise;
+    
 end
