@@ -41,6 +41,8 @@ Luishe is a custom bash-like/lisp-like language that compiles to and integrates 
 
 document and global variables will block until they are defined by another thread, if by the end of the program a thread is still blocked, it will throw an error.
 
+when reading a document, `$body` (in lua `_G.body`) is defined as the lines of text below the arrow (`-->`) statement
+
 ## Commands
 
 Luishe searches for commands in this order:
@@ -79,5 +81,15 @@ these are both Luishe commands and lua functions
 
 --> import <filepath>
 --- import a file
+
+```
+
+### Builtin commands (_G.commands)
+```
+--> stage <stage> [ before <stage> | after <stage> | apon <stageObject> |
+enables <stage> | disables <stage> | enabled-by <stage> | disabled-by <stage> |
+then <callback> | await ]
+--- work in progress
+
 
 ```
