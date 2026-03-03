@@ -52,19 +52,32 @@ Luishe searches for commands in this order:
 - document and global variables
 
 ### builtin commands (thread variables)
+these are both Luishe commands and lua functions
 ```
 
+--> if <predicate> <then> <else>
+--- (technically builtin to the syntax)
+--- simple branch statement
+
 --> repl
--- launches the REPL
+--- launches the REPL
 
 --> defer
--- await all other threads to finish or become blocked
+--- await all other threads to finish or become blocked
 
 --> await <thing>
--- await a promise or buffer
+--- await a promise or buffer
+--- (any object with the __await metamethod)
 
 --> warn <template> ...
 --> info <template> ...
+--> print <template> ...
+--- log to the console
 
+--> dump <thing>
+--- returns a pretty-printed string of an object
+
+--> import <filepath>
+--- import a file
 
 ```
