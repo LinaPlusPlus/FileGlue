@@ -11,7 +11,6 @@ function new_sandbox(thread)
         select   = select,
         tonumber = tonumber,
         tostring = tostring,
-        type     = type,
         xpcall   = xpcall,
 
         math = {
@@ -74,6 +73,8 @@ function new_sandbox(thread)
 
     sandbox._G = sandbox
 
+    -------[Modified Loaders]--------
+
     function sandbox.load(chunk, chunkname, mode, env)
         return load(chunk, chunkname, "t", env or sandbox)
     end
@@ -92,6 +93,33 @@ function new_sandbox(thread)
     -- TODO build a custom system for this
     function sandbox.require()
         error("require is disabled")
+    end
+
+    -------[Modified type logic]--------
+
+    function sandbox.type(t)
+        local typeof = type(t);
+
+        if typeof == "table" then 
+            local a = debug.getmetatable(t);
+            local try = a and rawget(a,"__type");
+            if try then return try end
+        end
+
+        return typeof;
+    end
+
+    function sandbox.await(t)
+        local typeof = type(t);
+
+        if typeof ~= "table" then 
+            return t;
+        end
+
+        local a = debug.getmetatable(t);
+        local try = a and rawget(a,"__await");
+        if try then return try(t) end
+        return t;
     end
 
     function sandbox.getmetatable(t,metatable)
