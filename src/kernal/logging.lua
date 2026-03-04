@@ -25,10 +25,14 @@ function log(mode, src, fmt, ...)
     local level_str = pad(lvl, 6)          -- e.g., "INFO  "
     local source_str = pad(src, 15)        -- e.g., "main.lua      "
     local message = fmt:format(...)
+    if lvl == "TRACE" then 
+        source_str = "\27[90m" .. source_str
+        message = "\27[90m" .. message
+    end
 
-    print(("%s[%s]%s  %s%s%s  %s"):format(
+    print(("%s[%s]%s  %s%s%s  %s%s"):format(
         color, level_str, reset,
         bold, source_str, reset,
-        message
+        message, reset
     ))
 end
