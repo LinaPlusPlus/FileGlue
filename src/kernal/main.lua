@@ -18,8 +18,8 @@ TAINT = nil;
 
 
 local VERBOSE_THREAD_LOGGING = false;
-function enable_verbose_thread_logging()
-    VERBOSE_THREAD_LOGGING = true;
+function verbose_thread_logging(on)
+    VERBOSE_THREAD_LOGGING = on ~= false;
 end
 
 function watcher_resume(watcher,k)

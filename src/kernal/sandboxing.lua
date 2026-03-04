@@ -1,3 +1,9 @@
+
+local GLOBALDEF_LOGGING = false;
+function globals_logging(on)
+    GLOBALDEF_LOGGING = on ~= false;
+end
+
 LOADED_FILE_PATHS = {};
 
 function new_sandbox(thread)
@@ -109,49 +115,6 @@ function new_sandbox(thread)
         return typeof;
     end
 
-    function sandbox.read(t,...)
-        local typeof = type(t);
-
-        if typeof ~= "table" then 
-            return t;
-        end
-
-        local a = debug.getmetatable(t);
-        local try = a and rawget(a,"__read");
-        if try then return try(t) end
-        return t;
-    end
-
-    function sandbox.writef(t,...)
-        return sandbox.write(t,string.format(...));
-    end
-
-    function sandbox.write(t,...)
-        local typeof = type(t);
-
-        if typeof ~= "table" then 
-            return t;
-        end
-
-        local a = debug.getmetatable(t);
-        local try = a and rawget(a,"__write");
-        if try then return try(t,...) end
-        return t;
-    end
-
-    function sandbox.writef(t,...)
-        local typeof = type(t);
-
-        if typeof ~= "table" then 
-            return t;
-        end
-
-        local a = debug.getmetatable(t);
-        local try = a and rawget(a,"__write");
-        if try then return try(t,...) end
-        return t;
-    end
-
     function sandbox.getmetatable(t,metatable)
         local l = getmetatable(t);
         return l;
@@ -161,6 +124,46 @@ function new_sandbox(thread)
         setmetatable(t,metatable);
         return t;
     end
+
+    -------[extended IO logic]--------
+
+    -- doubles as a 'read' function
+    function sandbox.await(t)
+        local typeof = type(t);
+
+        if typeof ~= "table" then 
+            return t;
+        end
+
+        local a = debug.getmetatable(t);
+        local try = a and rawget(a,"__await");
+        if try then return try(t) end
+
+        try = t.await;
+        if try then return try(t) end
+
+        return t;
+    end
+
+    function sandbox.writef(t,...)
+        return sandbox.write(t,string.format(...));
+    end
+
+    -- this can in theory also block
+    function sandbox.write(t,...)
+        local typeof = type(t);
+
+        if typeof ~= "table" then 
+            error(("%s: not a writable"):format(t));
+        end
+
+        local a = debug.getmetatable(t);
+        local try = a and rawget(a,"__write");
+        if try then return try(t,...) end
+        error(("%s: not a writable"):format(t));
+    end
+
+    -------[Done]--------
 
     local meta = {
         __metatable = {},
@@ -180,7 +183,9 @@ function new_sandbox(thread)
             got = SHARED_GLOBAL[k]
             if got ~= nil then return got end
 
-            log("trace",thread.label,"awaiting global %q",k)
+            if GLOBALDEF_LOGGING then 
+                log("trace",thread.label,"awaiting global %q",k)
+            end
             watcher_yield(SHARED_GLOBAL_WATCHER,k,thread);
             coroutine.yield();
             return SHARED_GLOBAL[k];
@@ -188,8 +193,9 @@ function new_sandbox(thread)
         else -- we are a document-wide key
             got = thread.group_global[k]
             if got ~= nil then return got end
-
-            log("trace",thread.label,"awaiting document %q",k)
+            if GLOBALDEF_LOGGING then 
+                log("trace",thread.label,"awaiting document %q",k)
+            end
             watcher_yield(thread.group_watcher,k,thread);
             coroutine.yield();
             return thread.group_global[k];
@@ -205,11 +211,15 @@ function new_sandbox(thread)
         local byte = string.byte(k)
         local upper = byte >= 65 and byte <= 90;
         if upper then
-            log("trace",thread.label,"defined global %q",k)
+            if GLOBALDEF_LOGGING then 
+                log("trace",thread.label,"defined  global %q",k)
+            end
             SHARED_GLOBAL[k] = v;
             watcher_resume(SHARED_GLOBAL_WATCHER,k);
         else
-            log("trace",thread.label,"defined document %q",k)
+            if GLOBALDEF_LOGGING then 
+                log("trace",thread.label,"defined  document %q",k)
+            end
             thread.group_global[k] = v;
             watcher_resume(thread.group_watcher,k);
         end

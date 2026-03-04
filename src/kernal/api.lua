@@ -178,6 +178,12 @@ function add_common_functions(thread)
         local lstr = string.rep("%s\t", select("#",...));
         log("info",thread.label,lstr,...);
     end
+
+    function pglobal.trace(...)
+        local lstr = string.rep("%s\t", select("#",...));
+        local msg = string.format(lstr,...);
+        log("trace",thread.label,"%s",debug.traceback(msg,2));
+    end
     
     --TODO add safety
     pglobal.dump = dump;
@@ -251,7 +257,7 @@ function new_promise(name)
         return name
     end
 
-    function meta:__read()
+    function meta:__await()
         if resolved then 
             return unpack(resolved)
         end
@@ -264,6 +270,8 @@ function new_promise(name)
     end
 
     function meta:__write(...)
+        if resolved then error(("%s: can only resolve promise once"):format(name)) end
+
         resolved = {...};
         for k,thread in ipairs(awaiters) do
             table.insert(RESUMABLE_THREADS,thread);
