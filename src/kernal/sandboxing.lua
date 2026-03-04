@@ -171,6 +171,11 @@ function new_sandbox(thread)
     function meta:__index(k)
 
 
+        if k == "traceme" then
+            log("trace",CURRENT_THREAD.label,"%s",debug.traceback("traceme",1));
+            return nil;
+        end 
+
         if k == nil then error(debug.traceback("Attempt to index global nil")) end
 
         local got = thread.p_global[k];
@@ -184,9 +189,9 @@ function new_sandbox(thread)
             if got ~= nil then return got end
 
             if GLOBALDEF_LOGGING then 
-                log("trace",thread.label,"awaiting global %q",k)
+                log("trace",CURRENT_THREAD.label,"awaiting global %q",k)
             end
-            watcher_yield(SHARED_GLOBAL_WATCHER,k,thread);
+            watcher_yield(SHARED_GLOBAL_WATCHER,k,CURRENT_THREAD);
             coroutine.yield();
             return SHARED_GLOBAL[k];
 
@@ -194,9 +199,9 @@ function new_sandbox(thread)
             got = thread.group_global[k]
             if got ~= nil then return got end
             if GLOBALDEF_LOGGING then 
-                log("trace",thread.label,"awaiting document %q",k)
+                log("trace",CURRENT_THREAD.label,"awaiting document %q",k)
             end
-            watcher_yield(thread.group_watcher,k,thread);
+            watcher_yield(thread.group_watcher,k,CURRENT_THREAD);
             coroutine.yield();
             return thread.group_global[k];
 
@@ -212,18 +217,19 @@ function new_sandbox(thread)
         local upper = byte >= 65 and byte <= 90;
         if upper then
             if GLOBALDEF_LOGGING then 
-                log("trace",thread.label,"defined  global %q",k)
+                log("trace",CURRENT_THREAD.label,"defined  global %q",k)
             end
             SHARED_GLOBAL[k] = v;
             watcher_resume(SHARED_GLOBAL_WATCHER,k);
         else
             if GLOBALDEF_LOGGING then 
-                log("trace",thread.label,"defined  document %q",k)
+                log("trace",CURRENT_THREAD.label,"defined  document %q",k)
             end
             thread.group_global[k] = v;
             watcher_resume(thread.group_watcher,k);
         end
     end
+
     setmetatable(sandbox, meta)
     thread.global = sandbox;
 end

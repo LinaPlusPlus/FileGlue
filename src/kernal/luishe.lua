@@ -154,6 +154,20 @@ function Lib.toLua(ast,varlookup)
     local uvars = {};
     local next_uvar = 0;
 
+    -- why were we iterating varlookup for `$var`s
+    local function lo_varword(a)
+        local try;
+        try = uvars[a];
+        if try then return "u"..tostring(try); end
+
+        for i = #stack, 1, -1 do
+            try = stack[i][a];
+            if try then return "u"..tostring(try); end
+        end
+
+        return ("_G[%q]"):format(a);
+    end
+
     local function varword(a)
 
         local try;
@@ -264,6 +278,11 @@ function Lib.toLua(ast,varlookup)
                 end
             end
 
+            -- another single statement parenthises check
+            if #ast == 1 and type(ast[1]) ~= "string" then
+                return tree(ast[1])
+            end
+
             for i,v in ipairs(ast) do
                 if i == 1 then 
                     if type(v) ~= "table" then
@@ -307,7 +326,7 @@ function Lib.toLua(ast,varlookup)
             table.insert(lines,ret);
             return "v"..next_var;
         elseif ast.type == "var" then
-            return varword(ast[1]);
+            return lo_varword(ast[1]);
         else 
             error("unknown AST statement");
         end
