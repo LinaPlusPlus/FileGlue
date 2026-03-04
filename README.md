@@ -51,7 +51,7 @@ Luishe searches for commands in this order:
 - _G.string
 - _G.math
 - thread variables
-- document and global variables
+- document and global variables (will cause blocking if unset)
 
 ### builtin commands (thread variables)
 these are both Luishe commands and lua functions
