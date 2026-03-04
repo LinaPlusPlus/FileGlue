@@ -1,0 +1,3 @@
+--> set p (promise)
+--> print (await $p)
+--> write $p "Hello World"
