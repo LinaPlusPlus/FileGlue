@@ -164,25 +164,25 @@ function add_common_functions(thread)
 
     function pglobal.print(...)
         local lstr = string.rep("%s\t", select("#",...));
-        log("print",thread.label,lstr,...);
+        log("print",CURRENT_THREAD.label,lstr,...);
     end
     
     --pglobal.log = log;
     function pglobal.warn(...)
         local lstr = string.rep("%s\t", select("#",...));
-        log("warn",thread.label,lstr,...);
+        log("warn",CURRENT_THREAD.label,lstr,...);
     end
 
     --pglobal.log = log;
     function pglobal.info(...)
         local lstr = string.rep("%s\t", select("#",...));
-        log("info",thread.label,lstr,...);
+        log("info",CURRENT_THREAD.label,lstr,...);
     end
 
     function pglobal.trace(...)
         local lstr = string.rep("%s\t", select("#",...));
         local msg = string.format(lstr,...);
-        log("trace",thread.label,"%s",debug.traceback(msg,2));
+        log("trace",CURRENT_THREAD.label,"%s",debug.traceback(msg,2));
     end
     
     --TODO add safety
